@@ -1,3 +1,3 @@
 # MiniProject
 #Created by Izzati, Nazrin, Syazwan from UNIMAP
-#Welcome to our Dobby Channel
+#Welcome to our Laundromat Service
