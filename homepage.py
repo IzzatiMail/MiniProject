@@ -246,3 +246,159 @@ for row in rows:
     tbl.insert("", tk.END, values=row)
 conn.commit()
 conn.close()
+
+################### TABLE ############################################################################
+tbl['columns'] = ('no', 'name', 'matrix','type', 'blok', 'machine','tarikh', 'time1','time2')
+
+tbl.column("#0", width=0,  stretch=NO)
+tbl.column("no",anchor=CENTER, width=30)
+tbl.column("name",anchor=W,width=190)
+tbl.column("matrix",anchor=W,width=80)
+tbl.column("type",anchor=W,width=60)
+tbl.column("blok",anchor=CENTER,width=40)
+tbl.column("machine",anchor=CENTER,width=40)
+tbl.column("tarikh",anchor=CENTER,width=80)
+tbl.column("time1",anchor=CENTER,width=50)
+tbl.column("time2",anchor=CENTER,width=50)
+tbl.heading("no",text="No",anchor=CENTER)
+tbl.heading("name",text="Name",anchor=W)
+tbl.heading("matrix",text="Matrix",anchor=W)
+tbl.heading("type",text="Type",anchor=W)
+tbl.heading("blok",text="Blok",anchor=CENTER)
+tbl.heading("machine",text="M_No.",anchor=CENTER)
+tbl.heading("tarikh",text="Date",anchor=CENTER)
+tbl.heading("time1",text="Start",anchor=CENTER)
+tbl.heading("time2",text="End",anchor=CENTER)
+
+
+tbl.grid(row=1,column=0,sticky=W,pady=10,padx=10)
+
+searchlabel = Label(frm3, text='Search', font='Arial 12 bold', bg="snow")
+searchlabel.grid(row=2,column=0,sticky=W,pady=5,padx=10)
+
+findmatrix = Entry(frm3,textvariable=var_mat,width=30, font='Arial 12', bg="#E0FFFF")
+findmatrix.grid(row=2,column=0,sticky=W,pady=5,padx=150)
+
+#btn search booking
+def click(*args):
+    findmatrix.delete(0,"end")
+btnfind=Button(frm3,text="SEARCH",command=find_data,width=8, height = 1,fg="#00008B", bg="snow",font='Arial 12 bold',activebackground="grey")
+btnfind.grid(row=2,column=0,sticky=W,pady=5,padx=510)
+findmatrix = Entry(frm3,textvariable=var_mat,width=30, font='Arial 12', bg="#E0FFFF")
+findmatrix.grid(row=2,column=0,sticky=W,pady=5,padx=150)
+findmatrix.insert(0,"Search by matrix only")
+#findmatrix.pack()
+findmatrix.bind("<Button-1>",click)
+
+dellabel = Label(frm3, text='Delete No', font='Arial 12 bold', bg="snow")
+dellabel.grid(row=3,column=0,sticky=W,pady=5,padx=10)
+
+deleteid = Entry(frm3,textvariable=var_delid,width=30, font='Arial 12', bg="#E0FFFF")
+deleteid.grid(row=3,column=0,sticky=W,pady=5,padx=150)
+
+def select_rec():
+    #clear entry
+    name.delete(0,END)
+    matrix.delete(0,END)
+    combo_type.set('')
+    combo_blok.set('')
+    combo_machine.set('')
+    date.delete(0,END)
+    combo_time1.set('')
+    combo_time2.set('')
+    #grab record no
+    selected=tbl.focus()
+    #grab record val
+    values=tbl.item(selected,'values')
+    tbl.item(selected)
+    #ltry.config(text=values[0])
+    #output to entry box
+    
+    name.insert(0,values[1])
+    matrix.insert(0,values[2])
+    combo_type.set(values[3])
+    combo_blok.set(values[4])
+    combo_machine.set(values[5])
+    date.insert(0,values[6])
+    combo_time1.set(values[7])
+    combo_time2.set(values[8])
+    
+def edit_rec():
+    dbname=var_name.get()
+    dbmatrix=var_id.get()
+    dbtype=var_type.get()
+    dbblok=var_blok.get()
+    dbmachine=var_machine.get()
+    dbdate=var_date.get()
+    dbfrom=var_timefrom.get()
+    dbuntil=var_timeuntil.get()
+    #grab the record number
+    selected=tbl.focus()
+    #update db
+    #connect to db
+    conn=sqlite3.connect('book.db')
+    cursor=conn.cursor()
+    #sqlite command of update
+    cursor.execute("""UPDATE Booking SET
+            NAME=?,
+            MATRIX=?,
+            TYPE=?,
+            BLOK=?,
+            MACHINE=?,
+            DATE=?,
+            T_FROM=?,
+            T_UNTIL=?
+            WHERE oid=?""",(dbname,dbmatrix,dbtype,dbblok,dbmachine,dbdate,dbfrom,dbuntil,tbl.set(selected,'#1')))
+    #commit changes
+    conn.commit()
+    #close connection
+    conn.close()
+    #update record
+    tbl.item(selected,text="",values=("",name.get(),matrix.get(),combo_type.get(),combo_blok.get(),combo_machine.get(),date.get(),combo_time1.get(),combo_time2.get()))
+    #clear entry
+    name.delete(0,END)
+    matrix.delete(0,END)
+    combo_type.set('')
+    combo_blok.set('')
+    combo_machine.set('')
+    date.delete(0,END)
+    combo_time1.set('')
+    combo_time2.set('')
+
+#function delete selected record    
+def del_data():
+    #connect to db
+    conn=sqlite3.connect('book.db')
+    #cursor instance
+    cursor=conn.cursor()
+    cursor.execute("DELETE FROM Booking WHERE NO= "+ deleteid.get())
+    #commit changes
+    conn.commit()
+    #close db
+    conn.close()
+    #clear duplicate data in table
+    for record in tbl.get_children():
+        tbl.delete(record)
+    conn=sqlite3.connect('book.db')
+    with conn:
+        cursor=conn.cursor()
+    cursor.execute("SELECT * FROM Booking")
+    rows = cursor.fetchall()
+    for row in rows:
+        tbl.insert("", tk.END, values=row)
+    conn.close()
+    deleteid.delete(0,END)
+
+#btn select booking
+btn_sel=Button(frm3,text="SELECT BOOKING",command=select_rec,width=15, height = 1,fg="#00008B", bg="snow",font='Arial 12 bold',activebackground="grey")
+btn_sel.grid(row=5,column=0,sticky=W,pady=5,padx=10)
+
+#btn edit booking
+btn_edit=Button(frm3,text="EDIT BOOKING",command=edit_rec,width=15, height = 1,fg="#00008B", bg="snow",font='Arial 12 bold',activebackground="grey")
+btn_edit.grid(row=5,column=0,sticky=W,pady=5,padx=240)
+
+#btn cancel booking
+btn_cancel=Button(frm3,text="CANCEL BOOKING",command=del_data,width=15, height = 1,bg="#FF4500",fg="white",font='Arial 12 bold',activebackground="grey")
+btn_cancel.grid(row=5,column=0,sticky=W,pady=5,padx=480)
+
+window.mainloop()
